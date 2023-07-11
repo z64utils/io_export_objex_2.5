@@ -207,32 +207,34 @@ class OBJEX_OT_add_joint_sphere(bpy.types.Operator):
         armature = context.active_object
         armature_data = armature.data
         assert isinstance(armature_data, bpy.types.Armature)
-        # get a Bone regardless of context.active_bone being a Bone or EditBone
-        bone = armature_data.bones[context.active_bone.name]
-
-        sphere_name = armature.name + "_JointSphere_" + bone.name
-        armature.data.objex_bonus.uses_joint_spheres = True
-    
+        
         if "Joint Collection" not in bpy.data.collections:
             collection = bpy.data.collections.new(name="Joint Collection")
             bpy.context.scene.collection.children.link(collection)
         else:
             collection = bpy.data.collections["Joint Collection"]
-        
         collection.color_tag = "COLOR_01"
+        
+        for bone in context.selected_bones:
+            if bone.select == False:
+                continue
+            bone = armature_data.bones[context.active_bone.name]
+            
+            sphere_name = armature.name + "_JointSphere_" + bone.name
+            armature.data.objex_bonus.uses_joint_spheres = True
+            
+            sphere = bpy.data.objects.new(sphere_name, None)
+            collection.objects.link(sphere)
 
-        sphere = bpy.data.objects.new(sphere_name, None)
-        collection.objects.link(sphere)
+            sphere.empty_display_type = "SPHERE"
+            sphere.parent = armature
+            sphere.parent_type = "BONE"
+            sphere.parent_bone = bone.name
+            sphere.show_in_front = True
 
-        sphere.empty_display_type = "SPHERE"
-        sphere.parent = armature
-        sphere.parent_type = "BONE"
-        sphere.parent_bone = bone.name
-        sphere.show_in_front = True
-
-        # Place the empty so that it covers the bone: centered on the middle of the bone and of radius half the bone length
-        sphere.location = (0, -bone.length/2, 0)
-        sphere.scale = [bone.length / 2] * 3
+            # Place the empty so that it covers the bone: centered on the middle of the bone and of radius half the bone length
+            sphere.location = (0, -bone.length/2, 0)
+            sphere.scale = [bone.length / 2] * 3
 
         return {"FINISHED"}
 
