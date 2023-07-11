@@ -236,12 +236,6 @@ class OBJEX_OT_export_base():
             default=export_objex.ObjexWriter.default_options['KEEP_VERTEX_ORDER'],
             )
 
-    global_scale = FloatProperty(
-            name='Scale',
-            soft_min=0.01, soft_max=1000.0,
-            default=1.0,
-            )
-
     # logging
     logging_level_console = IntProperty(
             name='Log level',
@@ -285,7 +279,6 @@ class OBJEX_OT_export_base():
     check_extension = True
 
     def draw(self, context):
-        self.layout.prop(self, 'global_scale')
         if self.use_selection:
             box = self.layout.box()
             box.prop(self, 'use_selection')
@@ -352,11 +345,10 @@ class OBJEX_OT_export_base():
             box.prop(self, 'logging_file_path')
         self.layout.prop(self, 'path_mode')
 
-    def execute(self, context):
+    def execute(self, context:bpy.types.Context):
         from mathutils import Matrix
         keywords = self.as_keywords(ignore=('axis_forward',
                                             'axis_up',
-                                            'global_scale',
                                             'check_existing',
                                             'filter_glob',
                                             'logging_level_console',
@@ -366,7 +358,7 @@ class OBJEX_OT_export_base():
                                             ))
 
         global_matrix = blender_version_compatibility.matmul(
-                         Matrix.Scale(self.global_scale, 4),
+                         Matrix.Scale(context.scene.objex_bonus.blend_scale, 4),
                          axis_conversion(to_forward=self.axis_forward,
                                          to_up=self.axis_up,
                                          ).to_4x4())

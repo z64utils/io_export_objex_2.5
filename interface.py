@@ -478,6 +478,10 @@ class OBJECT_PT_panel3d(bpy.types.Panel):
                 box.prop(armature.data.objex_bonus, "joint_sphere_header_filepath")
                 box.prop(armature.data.objex_bonus, "joint_sphere_scale")
                 box.operator("objex.export_joint_sphere_header")
+        
+        box = self.layout.box()
+        if foldable_menu(box, context.scene.objex_bonus, "menu_global"):
+            box.prop(context.scene.objex_bonus, 'blend_scale')
 
 # material
 

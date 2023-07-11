@@ -63,6 +63,12 @@ class SavedPose(bpy.types.PropertyGroup):
 
 class ObjexSceneProperties(bpy.types.PropertyGroup):
     is_objex_scene = bpy.props.BoolProperty()
+    
+    blend_scale = bpy.props.FloatProperty(
+        name='Export Scale',
+        soft_min=0.01, soft_max=1000.0,
+        default=1.0,
+    )
 
     colorspace_strategy = bpy.props.EnumProperty(
         # if modifying these items, also edit __init__.OBJEX_AddonPreferences.colorspace_default_strategy
@@ -102,6 +108,7 @@ class ObjexSceneProperties(bpy.types.PropertyGroup):
     menu_bone = bpy.props.BoolProperty(name='Bone')
     menu_joint = bpy.props.BoolProperty(name='Joint Sphere')
     menu_mesh = bpy.props.BoolProperty(name='Mesh')
+    menu_global = bpy.props.BoolProperty(name='Export Settings')
     mode_menu = bpy.props.EnumProperty(
         items=[
             ('menu_mode_combiner',    'Combiner', '(A-B)*C+D',                'SHADING_RENDERED', 0),
