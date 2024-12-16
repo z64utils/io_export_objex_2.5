@@ -554,7 +554,7 @@ def write_mtl(scene, filepath, append_header, options, copy_set, mtl_dict):
                     fw('vertexshading dynamic\n')
                 else: # vertex_shading == 'AUTO'
                     if objex_data.shading == "LIGHTING":
-                        fw('vertexshading normal\n')
+                        fw('vertexshading normal\n') 
                     else:
                         fw('vertexshading color\n')
                 if objex_data.standalone:

@@ -97,6 +97,7 @@ def menu_draw_mesh(layout:bpy.types.UILayout, context:bpy.types.Context):
 
     box = layout.box()
     box.row().prop(data, "type", expand=True)
+    
 
     box = layout.box()
     row = box.row()
@@ -158,6 +159,53 @@ class OBJEX_PT_mesh_object_prop(bpy.types.Panel):
         return get_active_object(context)
     def draw(self, context):
         menu_draw_mesh(self.layout, context)
+
+
+
+class OBJEX_OT_MassInit(bpy.types.Operator):
+    bl_idname = "objex.massinit"
+    bl_label = 'Mass Initialize'
+    bl_description = "Initializes Objex material on all materials in the scene"
+    bl_options = {"INTERNAL", "UNDO"}
+
+    def execute(self, context):
+
+           
+
+            if not bpy.context.object:
+                bpy.ops.mesh.primitive_cube_add(size=1)
+                temp_obj = bpy.context.object
+                temp_obj.name = "TempMaterialObject"
+            else:
+                temp_obj = bpy.context.object
+
+            original_materials = list(temp_obj.data.materials)
+
+            for mat in bpy.data.materials:
+                if not mat.users:
+                    continue
+
+                temp_obj.data.materials.clear()
+                temp_obj.data.materials.append(mat)
+
+                with bpy.context.temp_override(object=temp_obj, material=mat):
+                    bpy.ops.objex.material_build_nodes(
+                        init=True,
+                        reset=False,
+                        create=True,
+                        update_groups_of_existing=True,
+                        set_looks=True,
+                        set_basic_links=True
+                    )
+
+            temp_obj.data.materials.clear()
+            for mat in original_materials:
+                temp_obj.data.materials.append(mat)
+
+            if temp_obj.name == "TempMaterialObject":
+                bpy.data.objects.remove(temp_obj)
+
+            return {'FINISHED'}
 
 # armature
 
@@ -449,6 +497,8 @@ class OBJECT_PT_panel3d(bpy.types.Panel):
 
         if context.active_object != None and context.active_object.type == "EMPTY" and context.active_object.parent_type == "BONE":
             menu_draw_jointsphere(self.layout, context)
+
+        self.layout.operator('objex.massinit')
         
         box = self.layout.box()
         if foldable_menu(box, context.scene.objex_bonus, "menu_mesh"):
@@ -1307,6 +1357,11 @@ class OBJEX_OT_material_build_nodes(bpy.types.Operator):
                 self.report({"WARNING"}, "Something went wrong while searching a face texture to use for texel0")
                 log.exception("material = {!r} obj = {!r} mesh = {!r}", material, obj, mesh)
             # cycle 0: (TEXEL0 - 0) * PRIM  + 0
+
+
+
+
+
             cc0 = nodes["OBJEX_ColorCycle0"]
             ac0 = nodes["OBJEX_AlphaCycle0"]
             node_tree.links.new(nodes["OBJEX_Texel0"].outputs[0], cc0.inputs["A"])
@@ -1434,6 +1489,14 @@ class OBJEX_OT_material_build_nodes(bpy.types.Operator):
                 setattr(material.objex_bonus, property, "WRAP")
             else:
                 setattr(material.objex_bonus, property, "CLAMP")
+
+        material_name = material.name.replace("mtl_", "")
+        for img in bpy.data.images:
+            if material_name in img.name.replace(".tga", ""):
+                texel0texture = nodes["OBJEX_Texel0Texture"]
+                texel0texture.image = img  
+                log.debug("FOUND {}", img.name)    
+                break
 
         return {"FINISHED"}
 
@@ -1977,6 +2040,7 @@ classes = (
     OBJEX_OT_material_init_collision,
     OBJEX_OT_set_pixels_along_uv_from_image_dimensions,
     OBJEX_PT_material,
+    OBJEX_OT_MassInit
 )
 
 msgbus_owner = object()
