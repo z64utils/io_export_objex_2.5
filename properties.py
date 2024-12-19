@@ -557,7 +557,7 @@ def omp_change_texture_u_0(self, context):
 
     if material.objex_bonus.texture_u_0 == 'WRAP' or material.objex_bonus.texture_u_0 == 'MIRROR':
         setattr(wrap, 'default_value', True)
-    if material.objex_bonus.texture_u_0 == 'MIRROR':
+    if material.objex_bonus.texture_u_0 == 'MIRROR' or material.objex_bonus.texture_u_0 == 'MIRRORCLAMP':
         setattr(mirror, 'default_value', True)
 
     return
@@ -574,7 +574,7 @@ def omp_change_texture_u_1(self, context):
 
     if material.objex_bonus.texture_u_1 == 'WRAP' or material.objex_bonus.texture_u_1 == 'MIRROR':
         setattr(wrap, 'default_value', True)
-    if material.objex_bonus.texture_u_1 == 'MIRROR':
+    if material.objex_bonus.texture_u_1 == 'MIRROR' or material.objex_bonus.texture_u_0 == 'MIRRORCLAMP':
         setattr(mirror, 'default_value', True)
 
     return
@@ -589,7 +589,7 @@ def omp_change_texture_v_0(self, context):
 
     if material.objex_bonus.texture_v_0 == 'WRAP' or material.objex_bonus.texture_v_0 == 'MIRROR':
         setattr(wrap, 'default_value', True)
-    if material.objex_bonus.texture_v_0 == 'MIRROR':
+    if material.objex_bonus.texture_v_0 == 'MIRROR' or material.objex_bonus.texture_u_0 == 'MIRRORCLAMP':
         setattr(mirror, 'default_value', True)
 
     return
@@ -604,7 +604,7 @@ def omp_change_texture_v_1(self, context):
 
     if material.objex_bonus.texture_v_1 == 'WRAP' or material.objex_bonus.texture_v_1 == 'MIRROR':
         setattr(wrap, 'default_value', True)
-    if material.objex_bonus.texture_v_1 == 'MIRROR':
+    if material.objex_bonus.texture_v_1 == 'MIRROR' or material.objex_bonus.texture_u_0 == 'MIRRORCLAMP':
         setattr(mirror, 'default_value', True)
 
     return
@@ -861,6 +861,7 @@ class ObjexMaterialProperties(bpy.types.PropertyGroup):
             ('WRAP',   'Wrap'   ,'', 'TEXTURE', 0),
             ('CLAMP',  'Clamp'  ,'', 'MOD_EDGESPLIT', 1),
             ('MIRROR', 'Mirror' ,'', 'MOD_MIRROR', 2),
+            ('MIRRORCLAMP', 'Mirror+Clamp' ,'', 'MOD_MIRROR', 3),
         ],
         name='U',
         default='WRAP',
@@ -871,6 +872,7 @@ class ObjexMaterialProperties(bpy.types.PropertyGroup):
             ('WRAP',   'Wrap'   ,'', 'TEXTURE', 0),
             ('CLAMP',  'Clamp'  ,'', 'MOD_EDGESPLIT', 1),
             ('MIRROR', 'Mirror' ,'', 'MOD_MIRROR', 2),
+            ('MIRRORCLAMP', 'Mirror+Clamp' ,'', 'MOD_MIRROR', 3),
         ],
         name='U',
         default='WRAP',
@@ -882,6 +884,7 @@ class ObjexMaterialProperties(bpy.types.PropertyGroup):
             ('WRAP',   'Wrap'   ,'', 'TEXTURE', 0),
             ('CLAMP',  'Clamp'  ,'', 'MOD_EDGESPLIT', 1),
             ('MIRROR', 'Mirror' ,'', 'MOD_MIRROR', 2),
+            ('MIRRORCLAMP', 'Mirror+Clamp' ,'', 'MOD_MIRROR', 3),
         ],
         name='V',
         default='WRAP',
@@ -892,6 +895,7 @@ class ObjexMaterialProperties(bpy.types.PropertyGroup):
             ('WRAP',   'Wrap'   ,'', 'TEXTURE', 0),
             ('CLAMP',  'Clamp'  ,'', 'MOD_EDGESPLIT', 1),
             ('MIRROR', 'Mirror' ,'', 'MOD_MIRROR', 2),
+            ('MIRRORCLAMP', 'Mirror+Clamp' ,'', 'MOD_MIRROR', 3),
         ],
         name='V',
         default='WRAP',

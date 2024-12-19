@@ -224,11 +224,11 @@ def write_action(fw, scene, global_matrix, object_transform, armature, root_bone
 
     # Iterate in case of wonky IK setup
     for i in range(10):
-        scene.frame_set(frame_start)
+        scene.frame_set(int(frame_start))
 
     for frame_current_offset in range(frame_count):
         frame_current = frame_start + frame_current_offset
-        scene.frame_set(frame_current)
+        scene.frame_set(int(frame_current))
         # 421todo what if root_bone.head != 0
         """
         > In .anim are the coordinates in loc x y z absolute or relative to the position of the root bone as defined in .skel ?
