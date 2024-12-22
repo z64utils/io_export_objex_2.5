@@ -165,7 +165,7 @@ class OBJEX_PT_mesh_object_prop(bpy.types.Panel):
 class OBJEX_OT_MassInit(bpy.types.Operator):
     bl_idname = "objex.massinit"
     bl_label = 'Mass Initialize'
-    bl_description = "Initializes Objex material on all materials in the scene"
+    bl_description = "Initializes Objex material on all materials in the scene, also converts Fast64 materials"
     bl_options = {"INTERNAL", "UNDO"}
 
     def execute(self, context):
@@ -181,8 +181,6 @@ class OBJEX_OT_MassInit(bpy.types.Operator):
             original_materials = list(temp_obj.data.materials)
 
             for mat in bpy.data.materials:
-                #if not mat.users:
-                #    continue
                 if mat.use_nodes and "OBJEX_ColorCycle0" in mat.node_tree.nodes:
                     continue # material is already an OBJEX material
                 #print("converting material with name" + mat.name + "\n")
@@ -205,70 +203,7 @@ class OBJEX_OT_MassInit(bpy.types.Operator):
                         set_looks=True,
                         set_basic_links=True
                     )
-                if 'f3d_mat' in mat:
-
-                    if mat.f3d_mat.tex0.tex_set:
-                        mat.node_tree.nodes["OBJEX_Texel0Texture"].image = mat.f3d_mat.tex0.tex
-                        mat.node_tree.nodes["OBJEX_Texel0Texture"].interpolation = "Linear"
-                        mat.node_tree.nodes["OBJEX_Texel0Texture"].mute = False
-                        mat.node_tree.nodes["OBJEX_TransformUV0"].inputs[1].default_value = -mat.f3d_mat.tex0.S.shift
-                        mat.node_tree.nodes["OBJEX_TransformUV0"].inputs[2].default_value = -mat.f3d_mat.tex0.T.shift
-                    if mat.f3d_mat.tex1.tex_set:
-                        mat.node_tree.nodes["OBJEX_Texel1Texture"].image = mat.f3d_mat.tex1.tex
-                        mat.node_tree.nodes["OBJEX_Texel1Texture"].interpolation = "Linear"
-                        mat.node_tree.nodes["OBJEX_Texel1Texture"].mute = False
-                        mat.node_tree.nodes["OBJEX_TransformUV1"].inputs[1].default_value = -mat.f3d_mat.tex1.S.shift
-                        mat.node_tree.nodes["OBJEX_TransformUV1"].inputs[2].default_value = -mat.f3d_mat.tex1.T.shift
-                    
-                    if (mat.f3d_mat.set_prim):
-                        mat.node_tree.nodes["OBJEX_PrimColor"].inputs[0].default_value = (mat.f3d_mat.prim_color[0],mat.f3d_mat.prim_color[1],mat.f3d_mat.prim_color[2],mat.f3d_mat.prim_color[3])
-                        mat.node_tree.nodes["OBJEX_PrimColor"].inputs[1].default_value = mat.f3d_mat.prim_color[3]
-                        mat.node_tree.nodes["OBJEX_PrimColorRGB"].outputs[0].default_value = (mat.f3d_mat.prim_color[0],mat.f3d_mat.prim_color[1],mat.f3d_mat.prim_color[2],mat.f3d_mat.prim_color[3])
-                    
-                    if (mat.f3d_mat.set_env):
-                        mat.node_tree.nodes["OBJEX_EnvColor"].inputs[0].default_value = (mat.f3d_mat.env_color[0],mat.f3d_mat.env_color[1],mat.f3d_mat.env_color[2],mat.f3d_mat.env_color[3])
-                        mat.node_tree.nodes["OBJEX_EnvColor"].inputs[1].default_value = mat.f3d_mat.env_color[3]
-                        mat.node_tree.nodes["OBJEX_EnvColorRGB"].outputs[0].default_value = (mat.f3d_mat.env_color[0],mat.f3d_mat.env_color[1],mat.f3d_mat.env_color[2],mat.f3d_mat.env_color[3])
-
-
-                    mat.objex_bonus.geometrymode_G_SHADING_SMOOTH = mat.f3d_mat.rdp_settings.g_shade_smooth
-                    #mat.objex_bonus.geometrymode_G = mat.f3d_mat.rdp_settings.g_lighting
-                    mat.objex_bonus.geometrymode_G_FOG = mat.f3d_mat.rdp_settings.g_fog
-                    mat.node_tree.nodes["OBJEX_TransformUV_Main"].inputs[2].default_value = mat.f3d_mat.rdp_settings.g_tex_gen
-                    mat.node_tree.nodes["OBJEX_TransformUV_Main"].inputs[3].default_value = mat.f3d_mat.rdp_settings.g_tex_gen_linear
-                    #mat.objex_bonus.geometrymode_G = mat.f3d_mat.rdp_settings.g_cull_front
-                    #mat.objex_bonus.geometrymode_G = mat.f3d_mat.rdp_settings.g_cull_back
-                    mat.objex_bonus.geometrymode_G_ZBUFFER = mat.f3d_mat.rdp_settings.g_zbuffer
-                    #mat.objex_bonus.geometrymode_G = mat.f3d_mat.rdp_settings.g_shade
-                    #mat.objex_bonus.geometrymode_G = mat.f3d_mat.rdp_settings.g_lod
-                    mat.node_tree.nodes["OBJEX_TransformUV_Main"].inputs[4].default_value = mat.f3d_mat.tex_scale[0]
-                    mat.node_tree.nodes["OBJEX_TransformUV_Main"].inputs[5].default_value = mat.f3d_mat.tex_scale[1]
-
-                    mat.objex_bonus.texture_u_0 = 'MIRROR' if mat.f3d_mat.tex0.S.mirror else ('CLAMP' if mat.f3d_mat.tex0.S.clamp else 'WRAP')
-                    mat.objex_bonus.texture_v_0 = 'MIRROR' if mat.f3d_mat.tex0.T.mirror else ('CLAMP' if mat.f3d_mat.tex0.T.clamp else 'WRAP')
-                    mat.objex_bonus.texture_u_1 = 'MIRROR' if mat.f3d_mat.tex1.S.mirror else ('CLAMP' if mat.f3d_mat.tex1.S.clamp else 'WRAP')
-                    mat.objex_bonus.texture_v_1 = 'MIRROR' if mat.f3d_mat.tex1.T.mirror else ('CLAMP' if mat.f3d_mat.tex1.T.clamp else 'WRAP')
-
-                    mat.node_tree.nodes["OBJEX_ColorCycle0"].inputs[0].input_flags_C_A_0 = "G_CCMUX_" + mat.f3d_mat.combiner1.A
-                    mat.node_tree.nodes["OBJEX_ColorCycle0"].inputs[1].input_flags_C_B_0 = "G_CCMUX_" + mat.f3d_mat.combiner1.B
-                    mat.node_tree.nodes["OBJEX_ColorCycle0"].inputs[2].input_flags_C_C_0 = "G_CCMUX_" + mat.f3d_mat.combiner1.C
-                    mat.node_tree.nodes["OBJEX_ColorCycle0"].inputs[3].input_flags_C_D_0 = "G_CCMUX_" + mat.f3d_mat.combiner1.D
-                    mat.node_tree.nodes["OBJEX_ColorCycle1"].inputs[0].input_flags_C_A_1 = "G_CCMUX_" + mat.f3d_mat.combiner2.A
-                    mat.node_tree.nodes["OBJEX_ColorCycle1"].inputs[1].input_flags_C_B_1 = "G_CCMUX_" + mat.f3d_mat.combiner2.B
-                    mat.node_tree.nodes["OBJEX_ColorCycle1"].inputs[2].input_flags_C_C_1 = "G_CCMUX_" + mat.f3d_mat.combiner2.C
-                    mat.node_tree.nodes["OBJEX_ColorCycle1"].inputs[3].input_flags_C_D_1 = "G_CCMUX_" + mat.f3d_mat.combiner2.D
-
-                    mat.node_tree.nodes["OBJEX_AlphaCycle0"].inputs[0].input_flags_A_A_0 = "G_ACMUX_" + mat.f3d_mat.combiner1.A_alpha
-                    mat.node_tree.nodes["OBJEX_AlphaCycle0"].inputs[1].input_flags_A_B_0 = "G_ACMUX_" + mat.f3d_mat.combiner1.B_alpha
-                    mat.node_tree.nodes["OBJEX_AlphaCycle0"].inputs[2].input_flags_A_C_0 = "G_ACMUX_" + mat.f3d_mat.combiner1.C_alpha
-                    mat.node_tree.nodes["OBJEX_AlphaCycle0"].inputs[3].input_flags_A_D_0 = "G_ACMUX_" + mat.f3d_mat.combiner1.D_alpha
-                    mat.node_tree.nodes["OBJEX_AlphaCycle1"].inputs[0].input_flags_A_A_1 = "G_ACMUX_" + mat.f3d_mat.combiner2.A_alpha
-                    mat.node_tree.nodes["OBJEX_AlphaCycle1"].inputs[1].input_flags_A_B_1 = "G_ACMUX_" + mat.f3d_mat.combiner2.B_alpha
-                    mat.node_tree.nodes["OBJEX_AlphaCycle1"].inputs[2].input_flags_A_C_1 = "G_ACMUX_" + mat.f3d_mat.combiner2.C_alpha
-                    mat.node_tree.nodes["OBJEX_AlphaCycle1"].inputs[3].input_flags_A_D_1 = "G_ACMUX_" + mat.f3d_mat.combiner2.D_alpha
-
-                    mat.is_f3d = False
-                    del mat['f3d_mat']
+                
 
             temp_obj.data.materials.clear()
             for mat in original_materials:
@@ -276,6 +211,12 @@ class OBJEX_OT_MassInit(bpy.types.Operator):
 
             if temp_obj.name == "TempMaterialObject":
                 bpy.data.objects.remove(temp_obj)
+
+            # We remove attribute Alpha from Fast64
+            for obj in bpy.context.scene.objects:
+                if hasattr(obj.data, 'attributes'):
+                    if 'Alpha' in obj.data.attributes:
+                        obj.data.attributes.remove(obj.data.attributes['Alpha'])
 
             return {'FINISHED'}
 
@@ -620,6 +561,11 @@ class OBJEX_NodeSocketInterface_CombinerIO():
 
 class OBJEX_NodeSocketInterface_CombinerInput(bpy.types.NodeSocketInterface, OBJEX_NodeSocketInterface_CombinerIO):
     bl_socket_idname = "OBJEX_NodeSocket_CombinerInput"
+    bl_idname = "OBJEX_NodeSocketInterface_CombinerInput"
+    def draw(self, context, layout):
+        pass
+    def draw_color(self, context):
+        return (0.0,1.0,0.0,0.0)
 
 # registering NodeSocketInterface classes without registering their NodeSocket classes
 # led to many EXCEPTION_ACCESS_VIOLATION crashs, so don"t do that
@@ -741,6 +687,8 @@ def input_flag_list_choose_get(cycle, variable, cycle_id):
             while self.links:
                 tree.links.remove(self.links[0])
             tree.links.new(matching_socket, self)
+            #Noka: desperate attempt to fix the color bug
+            tree.links.new(matching_socket, self.node.inputs.get(self.name + "2"))
         
         return input_flag_list_choose
 
@@ -811,21 +759,29 @@ def create_node_group_cycle(group_name):
     tree.inputs.new("OBJEX_NodeSocket_CombinerInput", "B")
     tree.inputs.new("OBJEX_NodeSocket_CombinerInput", "C")
     tree.inputs.new("OBJEX_NodeSocket_CombinerInput", "D")
+    tree.inputs.new("NodeSocketColor", "A2")
+    tree.inputs.new("NodeSocketColor", "B2")
+    tree.inputs.new("NodeSocketColor", "C2")
+    tree.inputs.new("NodeSocketColor", "D2")
 
     A_minus_B = addMixRGBnode("SUBTRACT")
     A_minus_B.location = (-250,150)
     tree.links.new(inputs_node.outputs["A"], A_minus_B.inputs[1])
     tree.links.new(inputs_node.outputs["B"], A_minus_B.inputs[2])
+    tree.links.new(inputs_node.outputs["A2"], A_minus_B.inputs[1])
+    tree.links.new(inputs_node.outputs["B2"], A_minus_B.inputs[2])
 
     times_C = addMixRGBnode("MULTIPLY")
     times_C.location = (-50,100)
     tree.links.new(A_minus_B.outputs[0], times_C.inputs[1])
     tree.links.new(inputs_node.outputs["C"], times_C.inputs[2])
+    tree.links.new(inputs_node.outputs["C2"], times_C.inputs[2])
 
     plus_D = addMixRGBnode("ADD")
     plus_D.location = (150,50)
     tree.links.new(times_C.outputs[0], plus_D.inputs[1])
     tree.links.new(inputs_node.outputs["D"], plus_D.inputs[2])
+    tree.links.new(inputs_node.outputs["D2"], plus_D.inputs[2])
 
     outputs_node = tree.nodes.new("NodeGroupOutput")
     outputs_node.location = (350,0)
@@ -1440,11 +1396,19 @@ class OBJEX_OT_material_build_nodes(bpy.types.Operator):
             node_tree.links.new(nodes["OBJEX_Color0"].outputs[0], cc0.inputs["B"])
             node_tree.links.new(nodes["OBJEX_PrimColor"].outputs[0], cc0.inputs["C"])
             node_tree.links.new(nodes["OBJEX_Color0"].outputs[0], cc0.inputs["D"])
+            node_tree.links.new(nodes["OBJEX_Texel0"].outputs[0], cc0.inputs["A2"])
+            node_tree.links.new(nodes["OBJEX_Color0"].outputs[0], cc0.inputs["B2"])
+            node_tree.links.new(nodes["OBJEX_PrimColor"].outputs[0], cc0.inputs["C2"])
+            node_tree.links.new(nodes["OBJEX_Color0"].outputs[0], cc0.inputs["D2"])
 
             node_tree.links.new(nodes["OBJEX_Texel0"].outputs[1], ac0.inputs["A"])
             node_tree.links.new(nodes["OBJEX_Color0"].outputs[0], ac0.inputs["B"])
             node_tree.links.new(nodes["OBJEX_PrimColor"].outputs[1], ac0.inputs["C"])
             node_tree.links.new(nodes["OBJEX_Color0"].outputs[0], ac0.inputs["D"])
+            node_tree.links.new(nodes["OBJEX_Texel0"].outputs[1], ac0.inputs["A2"])
+            node_tree.links.new(nodes["OBJEX_Color0"].outputs[0], ac0.inputs["B2"])
+            node_tree.links.new(nodes["OBJEX_PrimColor"].outputs[1], ac0.inputs["C2"])
+            node_tree.links.new(nodes["OBJEX_Color0"].outputs[0], ac0.inputs["D2"])
 
             # cycle 1: (RESULT - 0) * SHADE + 0
             cc1 = nodes["OBJEX_ColorCycle1"]
@@ -1453,11 +1417,19 @@ class OBJEX_OT_material_build_nodes(bpy.types.Operator):
             node_tree.links.new(nodes["OBJEX_Color0"].outputs[0], cc1.inputs["B"])
             node_tree.links.new(nodes["OBJEX_Shade"].outputs[0], cc1.inputs["C"])
             node_tree.links.new(nodes["OBJEX_Color0"].outputs[0], cc1.inputs["D"])
+            node_tree.links.new(cc0.outputs[0], cc1.inputs["A2"])
+            node_tree.links.new(nodes["OBJEX_Color0"].outputs[0], cc1.inputs["B2"])
+            node_tree.links.new(nodes["OBJEX_Shade"].outputs[0], cc1.inputs["C2"])
+            node_tree.links.new(nodes["OBJEX_Color0"].outputs[0], cc1.inputs["D2"])
 
             node_tree.links.new(ac0.outputs[0], ac1.inputs["A"])
             node_tree.links.new(nodes["OBJEX_Color0"].outputs[0], ac1.inputs["B"])
             node_tree.links.new(nodes["OBJEX_Shade"].outputs[1], ac1.inputs["C"])
             node_tree.links.new(nodes["OBJEX_Color0"].outputs[0], ac1.inputs["D"])
+            node_tree.links.new(ac0.outputs[0], ac1.inputs["A2"])
+            node_tree.links.new(nodes["OBJEX_Color0"].outputs[0], ac1.inputs["B2"])
+            node_tree.links.new(nodes["OBJEX_Shade"].outputs[1], ac1.inputs["C2"])
+            node_tree.links.new(nodes["OBJEX_Color0"].outputs[0], ac1.inputs["D2"])
 
             # combiners output
             principledBSDF = nodes["Principled BSDF"]
@@ -1570,6 +1542,81 @@ class OBJEX_OT_material_build_nodes(bpy.types.Operator):
                 texel0texture.image = img  
                 log.debug("FOUND {}", img.name)    
                 break
+        mat = material
+        if 'is_f3d' in mat and mat.is_f3d:
+
+            if mat.f3d_mat.tex0.tex_set:
+                mat.node_tree.nodes["OBJEX_Texel0Texture"].image = mat.f3d_mat.tex0.tex
+                mat.node_tree.nodes["OBJEX_Texel0Texture"].interpolation = "Linear"
+                mat.node_tree.nodes["OBJEX_Texel0Texture"].mute = False
+                mat.node_tree.nodes["OBJEX_TransformUV0"].inputs[1].default_value = -mat.f3d_mat.tex0.S.shift
+                mat.node_tree.nodes["OBJEX_TransformUV0"].inputs[2].default_value = -mat.f3d_mat.tex0.T.shift
+                name = mat.node_tree.nodes["OBJEX_Texel0Texture"].image.name
+                bpy.data.images[name].objex_bonus.format = mat.f3d_mat.tex0.tex_format;
+            if mat.f3d_mat.tex1.tex_set:
+                mat.node_tree.nodes["OBJEX_Texel1Texture"].image = mat.f3d_mat.tex1.tex
+                mat.node_tree.nodes["OBJEX_Texel1Texture"].interpolation = "Linear"
+                mat.node_tree.nodes["OBJEX_Texel1Texture"].mute = False
+                mat.node_tree.nodes["OBJEX_TransformUV1"].inputs[1].default_value = -mat.f3d_mat.tex1.S.shift
+                mat.node_tree.nodes["OBJEX_TransformUV1"].inputs[2].default_value = -mat.f3d_mat.tex1.T.shift
+                mat.node_tree.nodes["OBJEX_EnvColor"].inputs[1].default_value = mat.f3d_mat.env_color[3]
+                name = mat.node_tree.nodes["OBJEX_Texel1Texture"].image.name
+                bpy.data.images[name].objex_bonus.format = mat.f3d_mat.tex1.tex_format;
+            
+            #if (mat.f3d_mat.set_prim):
+            mat.node_tree.nodes["OBJEX_PrimColor"].inputs[0].default_value = (mat.f3d_mat.prim_color[0],mat.f3d_mat.prim_color[1],mat.f3d_mat.prim_color[2],mat.f3d_mat.prim_color[3])
+            mat.node_tree.nodes["OBJEX_PrimColor"].inputs[1].default_value = mat.f3d_mat.prim_color[3]
+            mat.node_tree.nodes["OBJEX_PrimColorRGB"].outputs[0].default_value = (mat.f3d_mat.prim_color[0],mat.f3d_mat.prim_color[1],mat.f3d_mat.prim_color[2],mat.f3d_mat.prim_color[3])
+        
+            #if (mat.f3d_mat.set_env):
+            mat.node_tree.nodes["OBJEX_EnvColor"].inputs[0].default_value = (mat.f3d_mat.env_color[0],mat.f3d_mat.env_color[1],mat.f3d_mat.env_color[2],mat.f3d_mat.env_color[3])
+            mat.node_tree.nodes["OBJEX_EnvColor"].inputs[1].default_value = mat.f3d_mat.env_color[3]
+            mat.node_tree.nodes["OBJEX_EnvColorRGB"].outputs[0].default_value = (mat.f3d_mat.env_color[0],mat.f3d_mat.env_color[1],mat.f3d_mat.env_color[2],mat.f3d_mat.env_color[3])
+
+
+
+            mat.objex_bonus.geometrymode_G_SHADING_SMOOTH = mat.f3d_mat.rdp_settings.g_shade_smooth
+            mat.objex_bonus.shading = "LIGHTING" if mat.f3d_mat.rdp_settings.g_lighting else "VERTEX_COLOR";
+            mat.objex_bonus.geometrymode_G_FOG = mat.f3d_mat.rdp_settings.g_fog
+            mat.node_tree.nodes["OBJEX_TransformUV_Main"].inputs[2].default_value = mat.f3d_mat.rdp_settings.g_tex_gen
+            mat.node_tree.nodes["OBJEX_TransformUV_Main"].inputs[3].default_value = mat.f3d_mat.rdp_settings.g_tex_gen_linear
+            #mat.objex_bonus.geometrymode_G = mat.f3d_mat.rdp_settings.g_cull_front
+            #mat.objex_bonus.geometrymode_G = mat.f3d_mat.rdp_settings.g_cull_back
+            mat.objex_bonus.geometrymode_G_ZBUFFER = mat.f3d_mat.rdp_settings.g_zbuffer
+            #mat.objex_bonus.geometrymode_G = mat.f3d_mat.rdp_settings.g_shade
+            #mat.objex_bonus.geometrymode_G = mat.f3d_mat.rdp_settings.g_lod
+            mat.node_tree.nodes["OBJEX_TransformUV_Main"].inputs[4].default_value = mat.f3d_mat.tex_scale[0]
+            mat.node_tree.nodes["OBJEX_TransformUV_Main"].inputs[5].default_value = mat.f3d_mat.tex_scale[1]
+
+            mat.objex_bonus.texture_u_0 = 'MIRROR' if mat.f3d_mat.tex0.S.mirror else ('CLAMP' if mat.f3d_mat.tex0.S.clamp else 'WRAP')
+            mat.objex_bonus.texture_v_0 = 'MIRROR' if mat.f3d_mat.tex0.T.mirror else ('CLAMP' if mat.f3d_mat.tex0.T.clamp else 'WRAP')
+            mat.objex_bonus.texture_u_1 = 'MIRROR' if mat.f3d_mat.tex1.S.mirror else ('CLAMP' if mat.f3d_mat.tex1.S.clamp else 'WRAP')
+            mat.objex_bonus.texture_v_1 = 'MIRROR' if mat.f3d_mat.tex1.T.mirror else ('CLAMP' if mat.f3d_mat.tex1.T.clamp else 'WRAP')
+
+            mat.node_tree.nodes["OBJEX_ColorCycle0"].inputs[0].input_flags_C_A_0 = "G_CCMUX_" + mat.f3d_mat.combiner1.A
+            mat.node_tree.nodes["OBJEX_ColorCycle0"].inputs[1].input_flags_C_B_0 = "G_CCMUX_" + mat.f3d_mat.combiner1.B
+            mat.node_tree.nodes["OBJEX_ColorCycle0"].inputs[2].input_flags_C_C_0 = "G_CCMUX_" + mat.f3d_mat.combiner1.C
+            mat.node_tree.nodes["OBJEX_ColorCycle0"].inputs[3].input_flags_C_D_0 = "G_CCMUX_" + mat.f3d_mat.combiner1.D
+            mat.node_tree.nodes["OBJEX_ColorCycle1"].inputs[0].input_flags_C_A_1 = "G_CCMUX_" + mat.f3d_mat.combiner2.A
+            mat.node_tree.nodes["OBJEX_ColorCycle1"].inputs[1].input_flags_C_B_1 = "G_CCMUX_" + mat.f3d_mat.combiner2.B
+            mat.node_tree.nodes["OBJEX_ColorCycle1"].inputs[2].input_flags_C_C_1 = "G_CCMUX_" + mat.f3d_mat.combiner2.C
+            mat.node_tree.nodes["OBJEX_ColorCycle1"].inputs[3].input_flags_C_D_1 = "G_CCMUX_" + mat.f3d_mat.combiner2.D
+
+            mat.node_tree.nodes["OBJEX_AlphaCycle0"].inputs[0].input_flags_A_A_0 = "G_ACMUX_" + mat.f3d_mat.combiner1.A_alpha
+            mat.node_tree.nodes["OBJEX_AlphaCycle0"].inputs[1].input_flags_A_B_0 = "G_ACMUX_" + mat.f3d_mat.combiner1.B_alpha
+            mat.node_tree.nodes["OBJEX_AlphaCycle0"].inputs[2].input_flags_A_C_0 = "G_ACMUX_" + mat.f3d_mat.combiner1.C_alpha
+            mat.node_tree.nodes["OBJEX_AlphaCycle0"].inputs[3].input_flags_A_D_0 = "G_ACMUX_" + mat.f3d_mat.combiner1.D_alpha
+            mat.node_tree.nodes["OBJEX_AlphaCycle1"].inputs[0].input_flags_A_A_1 = "G_ACMUX_" + mat.f3d_mat.combiner2.A_alpha
+            mat.node_tree.nodes["OBJEX_AlphaCycle1"].inputs[1].input_flags_A_B_1 = "G_ACMUX_" + mat.f3d_mat.combiner2.B_alpha
+            mat.node_tree.nodes["OBJEX_AlphaCycle1"].inputs[2].input_flags_A_C_1 = "G_ACMUX_" + mat.f3d_mat.combiner2.C_alpha
+            mat.node_tree.nodes["OBJEX_AlphaCycle1"].inputs[3].input_flags_A_D_1 = "G_ACMUX_" + mat.f3d_mat.combiner2.D_alpha
+
+            mat.is_f3d = False
+            del mat['f3d_mat']
+
+            if hasattr(context.object.data, 'attributes'):
+                if 'Alpha' in context.object.data.attributes:
+                    context.object.data.attributes.remove(context.object.data.attributes['Alpha'])
 
         return {"FINISHED"}
 
