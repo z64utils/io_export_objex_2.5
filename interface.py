@@ -1553,6 +1553,7 @@ class OBJEX_OT_material_build_nodes(bpy.types.Operator):
                 mat.node_tree.nodes["OBJEX_TransformUV0"].inputs[2].default_value = -mat.f3d_mat.tex0.T.shift
                 name = mat.node_tree.nodes["OBJEX_Texel0Texture"].image.name
                 bpy.data.images[name].objex_bonus.format = mat.f3d_mat.tex0.tex_format;
+                
             if mat.f3d_mat.tex1.tex_set:
                 mat.node_tree.nodes["OBJEX_Texel1Texture"].image = mat.f3d_mat.tex1.tex
                 mat.node_tree.nodes["OBJEX_Texel1Texture"].interpolation = "Linear"
@@ -1562,29 +1563,78 @@ class OBJEX_OT_material_build_nodes(bpy.types.Operator):
                 mat.node_tree.nodes["OBJEX_EnvColor"].inputs[1].default_value = mat.f3d_mat.env_color[3]
                 name = mat.node_tree.nodes["OBJEX_Texel1Texture"].image.name
                 bpy.data.images[name].objex_bonus.format = mat.f3d_mat.tex1.tex_format;
-            
-            #if (mat.f3d_mat.set_prim):
+
             mat.node_tree.nodes["OBJEX_PrimColor"].inputs[0].default_value = (mat.f3d_mat.prim_color[0],mat.f3d_mat.prim_color[1],mat.f3d_mat.prim_color[2],mat.f3d_mat.prim_color[3])
             mat.node_tree.nodes["OBJEX_PrimColor"].inputs[1].default_value = mat.f3d_mat.prim_color[3]
             mat.node_tree.nodes["OBJEX_PrimColorRGB"].outputs[0].default_value = (mat.f3d_mat.prim_color[0],mat.f3d_mat.prim_color[1],mat.f3d_mat.prim_color[2],mat.f3d_mat.prim_color[3])
-        
-            #if (mat.f3d_mat.set_env):
+            mat.objex_bonus.write_primitive_color = mat.f3d_mat.set_prim
+
             mat.node_tree.nodes["OBJEX_EnvColor"].inputs[0].default_value = (mat.f3d_mat.env_color[0],mat.f3d_mat.env_color[1],mat.f3d_mat.env_color[2],mat.f3d_mat.env_color[3])
             mat.node_tree.nodes["OBJEX_EnvColor"].inputs[1].default_value = mat.f3d_mat.env_color[3]
             mat.node_tree.nodes["OBJEX_EnvColorRGB"].outputs[0].default_value = (mat.f3d_mat.env_color[0],mat.f3d_mat.env_color[1],mat.f3d_mat.env_color[2],mat.f3d_mat.env_color[3])
+            mat.objex_bonus.write_environment_color = mat.f3d_mat.set_env
 
-
-
-            mat.objex_bonus.geometrymode_G_SHADING_SMOOTH = mat.f3d_mat.rdp_settings.g_shade_smooth
+            mat.objex_bonus.backface_culling = mat.f3d_mat.rdp_settings.g_cull_back
             mat.objex_bonus.shading = "LIGHTING" if mat.f3d_mat.rdp_settings.g_lighting else "VERTEX_COLOR";
+
             mat.objex_bonus.geometrymode_G_FOG = mat.f3d_mat.rdp_settings.g_fog
+            mat.objex_bonus.rendermode_blender_flag_IM_RD = mat.f3d_mat.rdp_settings.im_rd
+            mat.objex_bonus.rendermode_blender_flag_CLR_ON_CVG = mat.f3d_mat.rdp_settings.clr_on_cvg
+            mat.objex_bonus.geometrymode_G_SHADING_SMOOTH = mat.f3d_mat.rdp_settings.g_shade_smooth
+
+            mat.objex_bonus.rendermode_blender_flag_Z_CMP = mat.f3d_mat.rdp_settings.z_cmp
+            mat.objex_bonus.rendermode_blender_flag_AA_EN = mat.f3d_mat.rdp_settings.aa_en
+            mat.objex_bonus.rendermode_blender_flag_ALPHA_CVG_SEL = mat.f3d_mat.rdp_settings.alpha_cvg_sel
+            mat.objex_bonus.rendermode_forceblending = mat.f3d_mat.rdp_settings.force_bl
+
+            mat.objex_bonus.rendermode_blender_flag_Z_UPD = mat.f3d_mat.rdp_settings.z_upd
+            mat.objex_bonus.geometrymode_G_ZBUFFER = mat.f3d_mat.rdp_settings.g_zbuffer
+            mat.objex_bonus.rendermode_blender_flag_CVG_X_ALPHA = mat.f3d_mat.rdp_settings.cvg_x_alpha
+            #mat.objex_bonus.geometrymode_G_LIGHTING_POSITIONAL = 
+
+            mat.objex_bonus.rendermode_blender_flag_CVG_DST_ = mat.f3d_mat.rdp_settings.cvg_dst
+            mat.objex_bonus.rendermode_zmode_ = mat.f3d_mat.rdp_settings.zmode.replace("ZMODE_", "")
+
+
+            blend_presets = [
+                ('G_BL_CLR_FOG', 'G_BL_A_FOG',   'G_BL_CLR_IN',  'G_BL_1MA'),
+                ('G_BL_CLR_FOG', 'G_BL_A_SHADE', 'G_BL_CLR_IN',  'G_BL_1MA'),
+                ('G_BL_CLR_IN',  'G_BL_0',       'G_BL_CLR_IN',  'G_BL_1'),
+                ('G_BL_CLR_IN',  'G_BL_A_IN',    'G_BL_CLR_MEM', 'G_BL_A_MEM'),
+                ('G_BL_CLR_IN',  'G_BL_A_IN',    'G_BL_CLR_MEM', 'G_BL_1MA'),
+            ]
+
+            blend_preset_names_0 = ('FOG_PRIM','FOG_SHADE','PASS','OPA','XLU')
+            blend_preset_names_1 = ('CUSTOM','CUSTOM','CUSTOM','OPA','XLU')
+
+            f64cycle0 = (mat.f3d_mat.rdp_settings.blend_p1,mat.f3d_mat.rdp_settings.blend_a1,mat.f3d_mat.rdp_settings.blend_m1,mat.f3d_mat.rdp_settings.blend_b1)
+            f64cycle1 = (mat.f3d_mat.rdp_settings.blend_p2,mat.f3d_mat.rdp_settings.blend_a2,mat.f3d_mat.rdp_settings.blend_m2,mat.f3d_mat.rdp_settings.blend_b2)
+
+            mat.objex_bonus.rendermode_blending_cycle0 = "CUSTOM"
+            mat.objex_bonus.rendermode_blending_cycle1 = "CUSTOM"
+
+            mat.objex_bonus.rendermode_blending_cycle0_custom_P = mat.f3d_mat.rdp_settings.blend_p1
+            mat.objex_bonus.rendermode_blending_cycle0_custom_A = mat.f3d_mat.rdp_settings.blend_a1
+            mat.objex_bonus.rendermode_blending_cycle0_custom_M = mat.f3d_mat.rdp_settings.blend_m1
+            mat.objex_bonus.rendermode_blending_cycle0_custom_B = mat.f3d_mat.rdp_settings.blend_b1
+
+            mat.objex_bonus.rendermode_blending_cycle1_custom_P = mat.f3d_mat.rdp_settings.blend_p2
+            mat.objex_bonus.rendermode_blending_cycle1_custom_A = mat.f3d_mat.rdp_settings.blend_a2
+            mat.objex_bonus.rendermode_blending_cycle1_custom_M = mat.f3d_mat.rdp_settings.blend_m2
+            mat.objex_bonus.rendermode_blending_cycle1_custom_B = mat.f3d_mat.rdp_settings.blend_b2
+            
+            c = 0
+            for preset in blend_presets:
+
+                if (preset == f64cycle0):
+                    mat.objex_bonus.rendermode_blending_cycle0 = blend_preset_names_0[c]
+                if (preset == f64cycle1):
+                    mat.objex_bonus.rendermode_blending_cycle1 = blend_preset_names_1[c]
+                c += 1
+            
             mat.node_tree.nodes["OBJEX_TransformUV_Main"].inputs[2].default_value = mat.f3d_mat.rdp_settings.g_tex_gen
             mat.node_tree.nodes["OBJEX_TransformUV_Main"].inputs[3].default_value = mat.f3d_mat.rdp_settings.g_tex_gen_linear
-            #mat.objex_bonus.geometrymode_G = mat.f3d_mat.rdp_settings.g_cull_front
-            #mat.objex_bonus.geometrymode_G = mat.f3d_mat.rdp_settings.g_cull_back
-            mat.objex_bonus.geometrymode_G_ZBUFFER = mat.f3d_mat.rdp_settings.g_zbuffer
-            #mat.objex_bonus.geometrymode_G = mat.f3d_mat.rdp_settings.g_shade
-            #mat.objex_bonus.geometrymode_G = mat.f3d_mat.rdp_settings.g_lod
+
             mat.node_tree.nodes["OBJEX_TransformUV_Main"].inputs[4].default_value = mat.f3d_mat.tex_scale[0]
             mat.node_tree.nodes["OBJEX_TransformUV_Main"].inputs[5].default_value = mat.f3d_mat.tex_scale[1]
 
