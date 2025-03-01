@@ -1554,7 +1554,7 @@ class OBJEX_OT_material_build_nodes(bpy.types.Operator):
                 name = mat.node_tree.nodes["OBJEX_Texel0Texture"].image.name
                 bpy.data.images[name].objex_bonus.format = mat.f3d_mat.tex0.tex_format;
                 
-            if mat.f3d_mat.tex1.tex_set:
+            if mat.f3d_mat.tex1.tex_set and 'image' in mat.node_tree.nodes["OBJEX_Texel1Texture"]:
                 mat.node_tree.nodes["OBJEX_Texel1Texture"].image = mat.f3d_mat.tex1.tex
                 mat.node_tree.nodes["OBJEX_Texel1Texture"].interpolation = "Linear"
                 mat.node_tree.nodes["OBJEX_Texel1Texture"].mute = False

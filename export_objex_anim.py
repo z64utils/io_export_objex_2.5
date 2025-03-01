@@ -180,7 +180,7 @@ def write_animations(file_write_anim, scene, global_matrix, object_transform, ar
 
         link_anim_file = None
         if link_anim_basepath is not None:
-            link_anim_filename = link_anim_basepath + action.name + '.bin'
+            link_anim_filename = os.path.dirname(link_anim_basepath) + os.sep + str(frame_count) + '-' + action.name + '.bin'
             link_anim_file = open(link_anim_filename, 'wb')
 
         try:
@@ -366,19 +366,19 @@ class OBJEX_OT_import_link_anim_bin(bpy.types.Operator):
             'fk_18', 'fk_19', 'fk_20'
         ]
         ik_bone = { 
-            'Control.HeadIK':      'fk_head',      
-            'Control.Root':        'fk_root',      
-            'Control.Sheath':      'fk_sheath',    
+            'HeadIK':      'limb_10',      
+            'ROOT':        'limb_00',      
+            'Sheath':      'limb_19',    
 
-            'Control.Arm.IK.L':    'fk_15',        
-            'Control.Arm.IK.R':    'fk_R_Hand',    
-            'Arm.Pole.L':          'fk.arm.pole.R',
-            'Arm.Pole.R':          'fk.arm.pole.L',
+            'Hand.IK.L':    'limb_15',        
+            'Hand.IK.R':    'limb_18',    
+            'Hand.pole.IK.L':          'limb_13',
+            'Hand.pole.IK.R':          'limb_16',
 
-            'Leg.IK.L':            'fk_L_leg',     
-            'Leg.IK.R':            'fk_R_leg',     
-            'Control.Leg.Pole.L':  'fk.leg.pole.L',
-            'Control.Leg.Pole.R':  'fk.leg.pole.R',
+            'Leg.IK.L':            'limb_08',     
+            'Leg.IK.R':            'limb_05',     
+            'Leg.01.track.L.001':  'limb_06',
+            'Leg.01.track.R.001':  'limb_03',
         }
 
         if context.object.type == "ARMATURE":
@@ -407,7 +407,11 @@ class OBJEX_OT_import_link_anim_bin(bpy.types.Operator):
 
         armature.animation_data.action = action
 
-        master = armature.pose.bones['Control.Master']
+        root_bone, bones_ordered = order_bones(armature)
+
+        bone_name = [bone.name for bone in bones_ordered]
+
+        master = armature.pose.bones[bone_name[0]] #previously control.master
         master.location[0] = 0
         master.location[1] = 0
         master.location[2] = 0
@@ -433,13 +437,15 @@ class OBJEX_OT_import_link_anim_bin(bpy.types.Operator):
                 bone.rotation_euler[1] = self.binang_to_rad(frame[3 + j * 3 + 1])
                 bone.rotation_euler[2] = self.binang_to_rad(frame[3 + j * 3 + 2])
             
-            eye_bone = armature.pose.bones['Eyes']
-            mouth_bone = armature.pose.bones['Mouth']
+            eye_bone = armature.pose.bones.get('Eyes')
+            mouth_bone = armature.pose.bones.get('Mouth')
 
-            eye_bone.location[0] = -((frame[(21 + 1) * 3] & 0xF) - 1)
-            mouth_bone.location[0] = -((frame[(21 + 1) * 3] >> 4) - 1)
-            eye_bone.keyframe_insert(data_path='location', frame=i, group='Eye')
-            mouth_bone.keyframe_insert(data_path='location', frame=i, group='Mouth')
+            if eye_bone and mouth_bone:
+
+                eye_bone.location[0] = -((frame[(21 + 1) * 3] & 0xF) - 1)
+                mouth_bone.location[0] = -((frame[(21 + 1) * 3] >> 4) - 1)
+                eye_bone.keyframe_insert(data_path='location', frame=i, group='Eye')
+                mouth_bone.keyframe_insert(data_path='location', frame=i, group='Mouth')
         
             for name_control, name_source in ik_bone.items():
                 bone_control = armature.pose.bones[name_control]
